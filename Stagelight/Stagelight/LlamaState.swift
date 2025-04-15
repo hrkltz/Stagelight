@@ -114,7 +114,15 @@ class LlamaState: ObservableObject {
         }
 
         let t_start = DispatchTime.now().uptimeNanoseconds
-        await llamaContext.completion_init(text: text)
+        await llamaContext.completion_init(text:
+            """
+            ### System:
+            You are an AI assistant that follows instructions exceptionally well. Be as hekoful as possible.
+            ### User:
+            \(text)
+            ### Assistant:
+            """
+        )
         let t_heat_end = DispatchTime.now().uptimeNanoseconds
         let t_heat = Double(t_heat_end - t_start) / NS_PER_S
 
