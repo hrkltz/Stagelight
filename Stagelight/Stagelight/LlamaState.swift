@@ -15,18 +15,34 @@ class LlamaState: ObservableObject {
     @Published var downloadedModels: [Model] = []
     @Published var undownloadedModels: [Model] = []
     let NS_PER_S = 1_000_000_000.0
-
+    
+    private let defaultModels: [Model] = [
+        Model(
+            name: "Mistral 7B Instruct v0.2 - GGUF - Q2_K (3.08 GB)",
+            url: "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q2_K.gguf?download=true",
+            filename: "mistral-7b-instruct-v0.2.Q2_K.gguf",
+            status: "download",
+        ),
+        Model(
+            name: "Mistral 7B Instruct v0.2 - GGUF - Q4_K_M (4.37 GB)",
+            url: "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf?download=true",
+            filename: "mistral-7b-instruct-v0.2.Q4_K_M.gguf",
+            status: "download",
+        ),
+        Model(
+            name: "Mistral 7B Instruct v0.2 - GGUF - Q8 (7.70 GB)",
+            url: "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q8.gguf?download=true",
+            filename: "mistral-7b-instruct-v0.2.Q8.gguf",
+            status: "download",
+        ),
+    ]
     private var llamaContext: LlamaContext?
     private var defaultModelUrl: URL? {
         Bundle.main.url(forResource: "ggml-model", withExtension: "gguf", subdirectory: "models")
         // Bundle.main.url(forResource: "llama-2-7b-chat", withExtension: "Q2_K.gguf", subdirectory: "models")
     }
 
-    init() {
-        loadModelsFromDisk()
-        loadDefaultModels()
-    }
-
+    
     private func loadModelsFromDisk() {
         do {
             let documentsURL = getDocumentsDirectory()
@@ -40,6 +56,7 @@ class LlamaState: ObservableObject {
         }
     }
 
+    
     private func loadDefaultModels() {
         do {
             try loadModel(modelUrl: defaultModelUrl)
@@ -58,49 +75,26 @@ class LlamaState: ObservableObject {
             }
         }
     }
+    
+    
+    private func updateDownloadedModels(modelName: String, status: String) {
+        undownloadedModels.removeAll { $0.name == modelName }
+    }
+    
+    
+    public init() {
+        loadModelsFromDisk()
+        loadDefaultModels()
+    }
 
-    func getDocumentsDirectory() -> URL {
+    
+    public func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
     }
-    private let defaultModels: [Model] = [
-        Model(name: "TinyLlama-1.1B (Q4_0, 0.6 GiB)",url: "https://huggingface.co/TheBloke/TinyLlama-1.1B-1T-OpenOrca-GGUF/resolve/main/tinyllama-1.1b-1t-openorca.Q4_0.gguf?download=true",filename: "tinyllama-1.1b-1t-openorca.Q4_0.gguf", status: "download"),
-        Model(
-            name: "TinyLlama-1.1B Chat (Q8_0, 1.1 GiB)",
-            url: "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q8_0.gguf?download=true",
-            filename: "tinyllama-1.1b-chat-v1.0.Q8_0.gguf", status: "download"
-        ),
-
-        Model(
-            name: "TinyLlama-1.1B (F16, 2.2 GiB)",
-            url: "https://huggingface.co/ggml-org/models/resolve/main/tinyllama-1.1b/ggml-model-f16.gguf?download=true",
-            filename: "tinyllama-1.1b-f16.gguf", status: "download"
-        ),
-
-        Model(
-            name: "Phi-2.7B (Q4_0, 1.6 GiB)",
-            url: "https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q4_0.gguf?download=true",
-            filename: "phi-2-q4_0.gguf", status: "download"
-        ),
-
-        Model(
-            name: "Phi-2.7B (Q8_0, 2.8 GiB)",
-            url: "https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q8_0.gguf?download=true",
-            filename: "phi-2-q8_0.gguf", status: "download"
-        ),
-
-        Model(
-            name: "Mistral-7B-v0.1 (Q4_0, 3.8 GiB)",
-            url: "https://huggingface.co/TheBloke/Mistral-7B-v0.1-GGUF/resolve/main/mistral-7b-v0.1.Q4_0.gguf?download=true",
-            filename: "mistral-7b-v0.1.Q4_0.gguf", status: "download"
-        ),
-        Model(
-            name: "OpenHermes-2.5-Mistral-7B (Q3_K_M, 3.52 GiB)",
-            url: "https://huggingface.co/TheBloke/OpenHermes-2.5-Mistral-7B-GGUF/resolve/main/openhermes-2.5-mistral-7b.Q3_K_M.gguf?download=true",
-            filename: "openhermes-2.5-mistral-7b.Q3_K_M.gguf", status: "download"
-        )
-    ]
-    func loadModel(modelUrl: URL?) throws {
+    
+    
+    public func loadModel(modelUrl: URL?) throws {
         if let modelUrl {
             messageLog += "Loading model...\n"
             llamaContext = try LlamaContext.create_context(path: modelUrl.path())
@@ -114,12 +108,7 @@ class LlamaState: ObservableObject {
     }
 
 
-    private func updateDownloadedModels(modelName: String, status: String) {
-        undownloadedModels.removeAll { $0.name == modelName }
-    }
-
-
-    func complete(text: String) async {
+    public func complete(text: String) async {
         guard let llamaContext else {
             return
         }
@@ -155,37 +144,9 @@ class LlamaState: ObservableObject {
             }
         }
     }
+    
 
-    func bench() async {
-        guard let llamaContext else {
-            return
-        }
-
-        messageLog += "\n"
-        messageLog += "Running benchmark...\n"
-        messageLog += "Model info: "
-        messageLog += await llamaContext.model_info() + "\n"
-
-        let t_start = DispatchTime.now().uptimeNanoseconds
-        let _ = await llamaContext.bench(pp: 8, tg: 4, pl: 1) // heat up
-        let t_end = DispatchTime.now().uptimeNanoseconds
-
-        let t_heat = Double(t_end - t_start) / NS_PER_S
-        messageLog += "Heat up time: \(t_heat) seconds, please wait...\n"
-
-        // if more than 5 seconds, then we're probably running on a slow device
-        if t_heat > 5.0 {
-            messageLog += "Heat up time is too long, aborting benchmark\n"
-            return
-        }
-
-        let result = await llamaContext.bench(pp: 512, tg: 128, pl: 1, nr: 3)
-
-        messageLog += "\(result)"
-        messageLog += "\n"
-    }
-
-    func clear() async {
+    public func clear() async {
         guard let llamaContext else {
             return
         }
